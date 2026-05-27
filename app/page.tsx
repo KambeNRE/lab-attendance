@@ -25,24 +25,32 @@ export default function Home() {
   const [reason, setReason] = useState("");
 
   useEffect(() => {
+  fetchMembers();
+
+  const timer = setInterval(() => {
     fetchMembers();
-  }, []);
+  }, 3000);
 
-  async function fetchMembers() {
-    const { data, error } = await supabase
-      .from("members")
-      .select("*")
-      .order("id");
+  return () => clearInterval(timer);
+}, []);
 
-    if (error) {
+ async function fetchMembers() {
+  setLoading(true);
+
+  const { data, error } = await supabase
+    .from("members")
+    .select("*")
+    .order("id");
+
+  if (error) {
     console.error(error);
-    alert("データ取得に失敗しました");
+    setLoading(false);
     return;
-    }  
-
-    setMembers(data || []);
-    console.log("DATA", data);
   }
+
+  setMembers(data || []);
+  setLoading(false);
+}
 
   async function saveStatus() {
     if (!selectedMember) return;
@@ -88,6 +96,11 @@ export default function Home() {
       <h1 className="text-3xl font-bold mb-6">
         研究室 状態管理システム
       </h1>
+      {loading && (
+  <p className="mb-4 text-black">
+    読み込み中...
+  </p>
+)}
       <p className="text-black mb-4">
   メンバー数: {members.length}
 </p>
