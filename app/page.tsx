@@ -17,6 +17,7 @@ const locations = ["9号館", "4号館", "国リハ", "自宅"];
 
 export default function Home() {
   const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
   const [status, setStatus] = useState("研究中");
