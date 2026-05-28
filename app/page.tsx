@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 type Member = {
   id: number;
   name: string;
+  student_id: string | null;
   status: string;
   location: string | null;
   reason: string | null;
@@ -129,6 +130,12 @@ export default function Home() {
             <div className="text-xl font-bold">
               {member.name}
             </div>
+
+            {member.student_id && (
+  <div className="text-sm mt-1">
+    {member.student_id}
+  </div>
+)}
 
             <div className="mt-2">
               {member.status}
