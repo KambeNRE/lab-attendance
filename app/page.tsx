@@ -11,7 +11,7 @@ export default function Home() {
         研究室メンバーの状態確認・研究ログ・月間集計を管理します。
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Link
           href="/status"
           className="bg-white rounded-xl p-6 shadow hover:bg-gray-50"
@@ -24,14 +24,19 @@ export default function Home() {
           </p>
         </Link>
 
-        <div className="bg-white rounded-xl p-6 shadow opacity-60">
-          <h2 className="text-xl font-bold mb-2">
-            研究ログを見る
-          </h2>
-          <p className="text-gray-600">
-            状態変更の履歴を確認します。今後追加予定。
-          </p>
-        </div>
+        
+          <Link
+  href="/logs"
+  className="bg-white rounded-xl p-6 shadow hover:bg-gray-50"
+>
+  <h2 className="text-xl font-bold mb-2">
+    研究ログを見る
+  </h2>
+  <p className="text-gray-600">
+    状態変更の履歴を新しい順に確認します。
+  </p>
+</Link>
+        
 
         <div className="bg-white rounded-xl p-6 shadow opacity-60">
           <h2 className="text-xl font-bold mb-2">
