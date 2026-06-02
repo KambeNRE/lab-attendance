@@ -82,6 +82,28 @@ setLoading(false);
       alert("保存失敗");
       return;
     }
+    const { error: logError } = await supabase
+  .from("attendance_logs")
+  .insert({
+    member_id: selectedMember.id,
+    student_id: selectedMember.student_id,
+    name: selectedMember.name,
+    status,
+    location:
+      status === "研究中" || status === "一時離席"
+        ? location
+        : null,
+    reason:
+      status === "欠席"
+        ? reason
+        : null,
+  });
+
+if (logError) {
+  console.error(logError);
+  alert("ログ保存失敗");
+  return;
+}
 
     setSelectedMember(null);
 
