@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
-
 type Member = {
   id: number;
   name: string;
@@ -17,7 +16,7 @@ type Member = {
 };
 
 const statuses = ["研究中", "一時離席", "退席", "欠席"];
-const locations = ["9号館", "4号館", "国リハ", "自宅"];
+const locations = ["9号館", "4号館", "国リハ", "自宅", "その他"];
 
 export default function Home() {
   const [members, setMembers] = useState<Member[]>([]);
@@ -27,53 +26,59 @@ export default function Home() {
 
   const [status, setStatus] = useState("研究中");
   const [location, setLocation] = useState("9号館");
+  const [customLocation, setCustomLocation] = useState("");
   const [reason, setReason] = useState("");
 
   useEffect(() => {
-  fetchMembers();
-
-  const timer = setInterval(() => {
     fetchMembers();
-  }, 3000);
 
-  return () => clearInterval(timer);
-}, []);
+    const timer = setInterval(() => {
+      fetchMembers();
+    }, 3000);
 
- async function fetchMembers() {
+    return () => clearInterval(timer);
+  }, []);
 
-  const { data, error } = await supabase
-    .from("members")
-    .select("*")
-    .order("display_order", { ascending: true });
+  async function fetchMembers() {
+    const { data, error } = await supabase
+      .from("members")
+      .select("*")
+      .order("display_order", { ascending: true });
 
-  if (error) {
-    console.error(error);
+    if (error) {
+      console.error(error);
+      setLoading(false);
+      return;
+    }
+
+    setMembers(data || []);
+    setLastUpdated(new Date().toLocaleTimeString("ja-JP"));
     setLoading(false);
-    return;
   }
 
-setMembers(data || []);
-setLastUpdated(
-  new Date().toLocaleTimeString("ja-JP")
-);
-setLoading(false);
-}
+  function getSaveLocation() {
+    if (!(status === "研究中" || status === "一時離席")) {
+      return null;
+    }
+
+    if (location === "その他") {
+      return customLocation;
+    }
+
+    return location;
+  }
 
   async function saveStatus() {
     if (!selectedMember) return;
+
+    const saveLocation = getSaveLocation();
 
     const { error } = await supabase
       .from("members")
       .update({
         status,
-        location:
-          status === "研究中" || status === "一時離席"
-            ? location
-            : null,
-        reason:
-          status === "欠席"
-            ? reason
-            : null,
+        location: saveLocation,
+        reason: status === "欠席" ? reason : null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", selectedMember.id);
@@ -83,31 +88,25 @@ setLoading(false);
       alert("保存失敗");
       return;
     }
-    const { error: logError } = await supabase
-  .from("attendance_logs")
-  .insert({
-    member_id: selectedMember.id,
-    student_id: selectedMember.student_id,
-    name: selectedMember.name,
-    status,
-    location:
-      status === "研究中" || status === "一時離席"
-        ? location
-        : null,
-    reason:
-      status === "欠席"
-        ? reason
-        : null,
-  });
 
-if (logError) {
-  console.error(logError);
-  alert("ログ保存失敗");
-  return;
-}
+    const { error: logError } = await supabase
+      .from("attendance_logs")
+      .insert({
+        member_id: selectedMember.id,
+        student_id: selectedMember.student_id,
+        name: selectedMember.name,
+        status,
+        location: saveLocation,
+        reason: status === "欠席" ? reason : null,
+      });
+
+    if (logError) {
+      console.error(logError);
+      alert("ログ保存失敗");
+      return;
+    }
 
     setSelectedMember(null);
-
     fetchMembers();
   }
 
@@ -125,23 +124,23 @@ if (logError) {
       <h1 className="text-3xl font-bold mb-6">
         研究室 状態管理システム
       </h1>
+
       <div className="mb-4">
-  <Link
-    href="/"
-    className="bg-blue-500 text-white px-4 py-2 rounded"
-  >
-    ← ホームに戻る
-  </Link>
-</div>
-      
-     <p className="mb-4 text-gray-500 h-6 text-sm">
-  {loading
-    ? "🔄 更新中..."
-    : `最終更新: ${lastUpdated}`}
-</p>
+        <Link
+          href="/"
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          ← ホームに戻る
+        </Link>
+      </div>
+
+      <p className="mb-4 text-gray-500 h-6 text-sm">
+        {loading ? "🔄 更新中..." : `最終更新: ${lastUpdated}`}
+      </p>
+
       <p className="text-black mb-4">
-  メンバー数: {members.length}
-</p>
+        メンバー数: {members.length}
+      </p>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {members.map((member) => (
@@ -149,16 +148,20 @@ if (logError) {
             key={member.id}
             onClick={() => {
               setSelectedMember(member);
-
               setStatus(member.status);
 
-              setLocation(
-                member.location || "9号館"
-              );
+              if (
+                member.location &&
+                !locations.includes(member.location)
+              ) {
+                setLocation("その他");
+                setCustomLocation(member.location);
+              } else {
+                setLocation(member.location || "9号館");
+                setCustomLocation("");
+              }
 
-              setReason(
-                member.reason || ""
-              );
+              setReason(member.reason || "");
             }}
             className={`${cardColor(
               member.status
@@ -169,10 +172,10 @@ if (logError) {
             </div>
 
             {member.student_id && (
-  <div className="text-sm mt-1">
-    {member.student_id}
-  </div>
-)}
+              <div className="text-sm mt-1">
+                {member.student_id}
+              </div>
+            )}
 
             <div className="mt-2">
               {member.status}
@@ -184,12 +187,11 @@ if (logError) {
               </div>
             )}
 
-            {member.status === "欠席" &&
-              member.reason && (
-                <div className="text-sm mt-1">
-                  理由あり
-                </div>
-              )}
+            {member.status === "欠席" && member.reason && (
+              <div className="text-sm mt-1">
+                理由あり
+              </div>
+            )}
           </button>
         ))}
       </div>
@@ -209,19 +211,14 @@ if (logError) {
             <select
               className="border p-2 w-full mb-4"
               value={status}
-              onChange={(e) =>
-                setStatus(e.target.value)
-              }
+              onChange={(e) => setStatus(e.target.value)}
             >
               {statuses.map((s) => (
-                <option key={s}>
-                  {s}
-                </option>
+                <option key={s}>{s}</option>
               ))}
             </select>
 
-            {(status === "研究中" ||
-              status === "一時離席") && (
+            {(status === "研究中" || status === "一時離席") && (
               <>
                 <label className="block mb-2">
                   場所
@@ -230,18 +227,29 @@ if (logError) {
                 <select
                   className="border p-2 w-full mb-4"
                   value={location}
-                  onChange={(e) =>
-                    setLocation(
-                      e.target.value
-                    )
-                  }
+                  onChange={(e) => {
+                    setLocation(e.target.value);
+
+                    if (e.target.value !== "その他") {
+                      setCustomLocation("");
+                    }
+                  }}
                 >
                   {locations.map((l) => (
-                    <option key={l}>
-                      {l}
-                    </option>
+                    <option key={l}>{l}</option>
                   ))}
                 </select>
+
+                {location === "その他" && (
+                  <input
+                    className="border p-2 w-full mb-4"
+                    value={customLocation}
+                    onChange={(e) =>
+                      setCustomLocation(e.target.value)
+                    }
+                    placeholder="場所を入力"
+                  />
+                )}
               </>
             )}
 
@@ -254,11 +262,7 @@ if (logError) {
                 <input
                   className="border p-2 w-full mb-4"
                   value={reason}
-                  onChange={(e) =>
-                    setReason(
-                      e.target.value
-                    )
-                  }
+                  onChange={(e) => setReason(e.target.value)}
                 />
               </>
             )}
@@ -272,9 +276,7 @@ if (logError) {
               </button>
 
               <button
-                onClick={() =>
-                  setSelectedMember(null)
-                }
+                onClick={() => setSelectedMember(null)}
                 className="bg-gray-300 px-4 py-2 rounded"
               >
                 キャンセル
