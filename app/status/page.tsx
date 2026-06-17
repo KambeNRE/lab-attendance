@@ -13,6 +13,7 @@ type Member = {
   location: string | null;
   reason: string | null;
   updated_at: string;
+  display_order: number | null;
 };
 
 const statuses = ["研究中", "一時離席", "退席", "欠席"];
@@ -43,7 +44,7 @@ export default function Home() {
   const { data, error } = await supabase
     .from("members")
     .select("*")
-    .order("id");
+    .order("display_order", { ascending: true });
 
   if (error) {
     console.error(error);

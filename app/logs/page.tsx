@@ -13,6 +13,7 @@ type AttendanceLog = {
   location: string | null;
   reason: string | null;
   changed_at: string;
+  display_order: number | null;
 };
 
 export default function LogsPage() {
