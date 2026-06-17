@@ -24,19 +24,17 @@ export default function Home() {
           </p>
         </Link>
 
-        
-          <Link
-  href="/logs"
-  className="bg-white rounded-xl p-6 shadow hover:bg-gray-50"
->
-  <h2 className="text-xl font-bold mb-2">
-    研究ログを見る
-  </h2>
-  <p className="text-gray-600">
-    状態変更の履歴を新しい順に確認します。
-  </p>
-</Link>
-        
+        <Link
+          href="/logs"
+          className="bg-white rounded-xl p-6 shadow hover:bg-gray-50"
+        >
+          <h2 className="text-xl font-bold mb-2">
+            研究ログを見る
+          </h2>
+          <p className="text-gray-600">
+            状態変更の履歴を新しい順に確認します。
+          </p>
+        </Link>
 
         <div className="bg-white rounded-xl p-6 shadow opacity-60">
           <h2 className="text-xl font-bold mb-2">
@@ -55,6 +53,18 @@ export default function Home() {
             研究室内の研究時間ランキングを表示します。今後追加予定。
           </p>
         </div>
+
+        <Link
+          href="/admin"
+          className="bg-white rounded-xl p-6 shadow hover:bg-gray-50 md:col-span-2"
+        >
+          <h2 className="text-xl font-bold mb-2">
+            管理者設定
+          </h2>
+          <p className="text-gray-600">
+            メンバー編集・並び順変更
+          </p>
+        </Link>
       </div>
     </main>
   );
